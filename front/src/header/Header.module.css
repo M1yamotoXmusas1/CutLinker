@@ -1,0 +1,12 @@
+.name {
+    margin-left: 8%;
+    color: hsl(180, 100%, 50%);
+    font-size: 3rem;
+}
+
+.header {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+}
