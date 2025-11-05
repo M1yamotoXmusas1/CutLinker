@@ -3,28 +3,34 @@
   flex-direction: column;
   align-items: center;
   background-color: aqua;
-  padding: 20px;
   width: 50%;          /* Ширина 50% */
   height: 20vh;        /* Высота 20% от высоты окна */
   margin: 40vh auto;      /* Центрирование по горизонтали */
   box-sizing: border-box;
+  padding-top: 10px;
+  border-radius: 30px;
 }
 
 .link {
-  width: 300px;
-  padding: 10px;
-  font-size: 16px;
+  width: 70%;
+  padding: 10px 20px;
+  font-size: 2rem;
+  color: #ccc;
   margin-bottom: 10px;
   box-sizing: border-box;
+  margin-top: 30px;
+  border-radius: 20px;
+  border: none;
 }
 
 .button {
-  width: 150px; /* В 2 раза меньше ширины инпута */
+  width: 45%; /* В 2 раза меньше ширины инпута */
   padding: 10px;
   font-size: 16px;
   background-color: white;
   color: black;
   border: 1px solid #ccc;
+  border-radius: 20px;
   cursor: pointer;
   box-sizing: border-box;
 }
