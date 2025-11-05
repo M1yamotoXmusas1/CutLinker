@@ -20,6 +20,11 @@ import (
 // 5. создать страничку
 // 6. profit
 
+// 1. added error handler to func getRandomString
+// 2. error print with fmt replaced with log
+
+const IP = "http://localhost:11111"
+
 type shortlink struct {
 	baseurl  string
 	shorturl string
@@ -50,15 +55,18 @@ func insertLinkTable(db *sql.DB, link shortlink) int {
 	if err != nil {
 		log.Fatal("Fail to insert into table", err)
 	}
-	fmt.Printf("pk: %v\n", pk)
 	return pk
 }
 
-func generateRandomString(lenght int) string {
+func generateRandomString(length int) string {
 	// 16 символов в байт -> 12 в base64
-	lenght = (lenght * 3) / 4
-	bytes := make([]byte, lenght)
-	rand.Read(bytes)
+	length = (length * 3) / 4
+	bytes := make([]byte, length)
+	_, err := rand.Read(bytes)
+
+	if err != nil {
+		log.Println("Failed to generate string: ", err)
+	}
 
 	return base64.URLEncoding.EncodeToString(bytes)
 }
@@ -68,17 +76,17 @@ func CreateURLHandler(db *sql.DB) http.HandlerFunc {
 		httpRequestBody, err_request := io.ReadAll(r.Body)
 
 		if err_request != nil {
-			fmt.Println("Fail to read HTTP body: ", err_request)
+			log.Println("Fail to read HTTP body: ", err_request)
 		}
 
 		url := string(httpRequestBody)
 
 		if !strings.HasPrefix(url, "https://") {
-			fmt.Printf("URL is not valid %v\n", url)
+			log.Println("URL is not valid: ", url)
 			return
 		}
 
-		shortUrl := "https://localhost:11111/" + generateRandomString(8)
+		shortUrl := "http://localhost:11111/" + generateRandomString(8)
 
 		link := shortlink{url, shortUrl, 0}
 		insertLinkTable(db, link)
@@ -86,8 +94,27 @@ func CreateURLHandler(db *sql.DB) http.HandlerFunc {
 		response := []byte(shortUrl)
 		_, err_write := w.Write(response)
 		if err_write != nil {
-			fmt.Println("Fail to write HTTP response: ", err_write)
+			log.Println("Fail to write HTTP response: ", err_write)
 		}
+	}
+}
+
+func RedirectHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			return
+		}
+		query := `SELECT baseurl FROM link WHERE shorturl = $1`
+		baseurl := ""
+		shorturl := IP + r.URL.Path
+		err := db.QueryRow(query, shorturl).Scan(&baseurl)
+		fmt.Println("CHLEEEEN", shorturl)
+		fmt.Println("ADSP[aD]", baseurl)
+		if err != nil {
+			log.Println("Failed to find url in database: ", err)
+		}
+		log.Println("Alright! baseurl: ", baseurl)
+		http.Redirect(w, r, baseurl, http.StatusSeeOther)
 	}
 }
 
@@ -107,10 +134,10 @@ func main() {
 	createLinkTable(db)
 
 	http.HandleFunc("/createURL", CreateURLHandler(db))
-	//http.HandleFunc("/redirect", CreateURLHandler)
+	http.HandleFunc("/", RedirectHandler(db))
 
 	err := http.ListenAndServe(":11111", nil)
 	if err != nil {
-		fmt.Println("Произошла ошибка:", err)
+		log.Println("Произошла ошибка:", err)
 	}
 }
